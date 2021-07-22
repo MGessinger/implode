@@ -1,15 +1,5 @@
 #include "solver_fuchs.h"
 
-static inline slong clamp (slong in, slong min, slong max)
-{
-	if (in < min)
-		return min;
-	else if (in > max)
-		return max;
-	else
-		return in;
-}
-
 slong padic_ode_valuation (padic_ode_t ODE)
 {
 	slong val = 0;
@@ -25,12 +15,12 @@ slong padic_ode_valuation (padic_ode_t ODE)
 	return val;
 }
 
-slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coeffs, padic_ctx_t ctx, slong prec)
+slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coeffs, padic_ctx_t ctx)
 {
 	/* Iteratively compute the first num_of_coeffs coefficients of the power series solution of the ODE around zero */
-	padic_t temp1; padic_init2(temp1, prec);
-	padic_t temp2; padic_init2(temp2, prec);
-	padic_t new_coeff; padic_init2(new_coeff, prec);
+	padic_t temp1; padic_init(temp1);
+	padic_t temp2; padic_init(temp2);
+	padic_t new_coeff; padic_init(new_coeff);
 
 	fmpz_t fac; fmpz_init(fac);
 	slong i_min, i_max;

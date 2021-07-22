@@ -24,4 +24,14 @@ void padic_ode_clear(padic_ode_t ODE);
 /* I/O */
 void padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx);
 
+static inline slong clamp (slong in, slong min, slong max)
+{
+	if (in < min)
+		return min;
+	else if (in > max)
+		return max;
+	else
+		return in;
+}
+
 #endif /* PADIC_DIFFEQ_H_ */

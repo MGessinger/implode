@@ -1,4 +1,4 @@
-#include "padic_diffeq.h"
+#include "padic_ode.h"
 
 void padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx)
 {
