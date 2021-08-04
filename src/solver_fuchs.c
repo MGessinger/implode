@@ -6,7 +6,7 @@ slong padic_ode_valuation (padic_ode_t ODE)
 	for (int i = 0; i <= order(ODE); i++)
 	{
 		slong v = i;
-		while (padic_is_zero(diff_eq_coeff(ODE, i, i-v)))
+		while (padic_is_zero(padic_ode_coeff(ODE, i, i-v)))
 			v--;
 
 		if (v > val)
@@ -33,7 +33,7 @@ slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coe
 		slong exp = b_max - v;
 		/* Loop through the known coefficients of the power series */
 		slong b_min = clamp(exp - degree(ODE), 0, b_max);
-		padic_set(temp2, diff_eq_coeff(ODE, 0, exp - b_min), ctx);
+		padic_set(temp2, padic_ode_coeff(ODE, 0, exp - b_min), ctx);
 		slong b = b_min;
 		do {
 			padic_poly_get_coeff_padic(temp1, res, b, ctx);
@@ -49,7 +49,7 @@ slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coe
 			for (slong i = i_min; i <= i_max; i++)
 			{
 				padic_set_fmpz(temp1, fac, ctx);
-				padic_mul(temp1, diff_eq_coeff(ODE, i, i + exp - b), temp1, ctx);
+				padic_mul(temp1, padic_ode_coeff(ODE, i, i + exp - b), temp1, ctx);
 				padic_add(temp2, temp2, temp1, ctx);
 				fmpz_mul_si(fac, fac, b-i);
 			}

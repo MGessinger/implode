@@ -26,7 +26,7 @@ int indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong s
 
 		/* Add the coefficient of p_i */
 		padic_poly_get_coeff_padic(tmpScalar, result, 0, ctx);
-		padic_add(tmpScalar, diff_eq_coeff(ODE, imax, imax+nu), tmpScalar, ctx);
+		padic_add(tmpScalar, padic_ode_coeff(ODE, imax, imax+nu), tmpScalar, ctx);
 		padic_poly_set_coeff_padic(result, 0, tmpScalar, ctx);
 	}
 
@@ -60,35 +60,35 @@ int indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, padic_t rho, 
 	{
 		padic_mul(result, result, temp1, ctx);
 		padic_add(temp1, temp1, const_one, ctx);
-		padic_add(result, result, diff_eq_coeff(ODE, imax, imax+nu), ctx);
+		padic_add(result, result, padic_ode_coeff(ODE, imax, imax+nu), ctx);
 	}
 	padic_clear(temp1);
 	padic_clear(const_one);
 	return 1;
 }
 
-void padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho, slong degree, padic_ctx_t ctx)
+void padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho, slong sol_degree, padic_ctx_t ctx)
 {
-	slong prec = padic_get_prec(rho) + degree;
-	padic_poly_fit_length(res, degree);
+	slong prec = padic_get_prec(rho) + sol_degree;
 	padic_t newCoeff, temp, g_nu;
 	padic_init2(newCoeff, prec);
 	padic_init2(temp, prec);
 	padic_init2(g_nu, prec);
 
-	for (slong nu = order(ODE); nu < degree; nu++)
+	padic_poly_fit_length(res, sol_degree);
+	for (slong nu = order(ODE); nu < sol_degree; nu++)
 	{
 		padic_zero(newCoeff);
 
-		int step = 1;
+		int shift = 1;
 		int abort = 0;
-		while ( !(abort | (step>nu)) )
+		while ( !(abort | (shift>nu)) )
 		{
-			abort = indicial_polynomial_evaluate(temp, ODE, rho, nu-step, step, ctx);
-			padic_poly_get_coeff_padic(g_nu, res, nu-step, ctx);
+			abort = indicial_polynomial_evaluate(temp, ODE, rho, nu-shift, shift, ctx);
+			padic_poly_get_coeff_padic(g_nu, res, nu-shift, ctx);
 			padic_mul(temp, temp, g_nu, ctx);
 			padic_sub(newCoeff, newCoeff, temp, ctx);
-			step++;
+			shift++;
 		}
 		indicial_polynomial_evaluate(temp, ODE, rho, nu, 0, ctx);
 		padic_div(newCoeff, newCoeff, temp, ctx);

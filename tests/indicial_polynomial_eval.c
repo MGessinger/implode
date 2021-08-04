@@ -2,26 +2,17 @@
 #include "solver_frobenius.h"
 
 int main () {
-	/* Memory Setup */
-	padic_t *poly = malloc(9*sizeof(padic_t));
-	if (poly == NULL)
-		return -1;
-
 	slong p = 7;
-	padic_ctx_t ctx; padic_ctx_init(ctx, &p, 0, 64, PADIC_SERIES);
+	padic_ctx_t ctx; padic_ctx_init(ctx, &p, 0, 16, PADIC_SERIES);
 
 	/* Initialize the ODE */
-	slong coeffs[9] = {1,0,0, 0,2,7, 0,0,1};
-	for (int i = 0; i < 9; i++)
-	{
-		padic_init(poly[i]);
-		padic_set_si(poly[i], coeffs[i], ctx);
-	}
-	padic_ode ODE_struct;
-	padic_ode_t ODE = &ODE_struct;
-	order(ODE) = 2;
-	degree(ODE) = 2;
-	ODE_struct.polys = poly;
+	padic_ode_t ODE;
+	padic_ode_init_blank(ODE, 2, 2, 20);
+
+	padic_set_si(padic_ode_coeff(ODE, 0, 0), 1, ctx);
+	padic_set_si(padic_ode_coeff(ODE, 1, 1), 2, ctx);
+	padic_set_si(padic_ode_coeff(ODE, 1, 2), 7, ctx);
+	padic_set_si(padic_ode_coeff(ODE, 2, 2), 1, ctx);
 
 	/* Test the direct evaluation of indicial equation */
 	padic_t num; padic_init(num);
@@ -36,9 +27,7 @@ int main () {
 	/* Memory Cleanup */
 	padic_clear(num);
 	padic_clear(exp);
-	for (int i = 0; i < 9; i++)
-		padic_clear(poly[i]);
-	free(poly);
+	padic_ode_clear(ODE);
 	padic_ctx_clear(ctx);
 	flint_cleanup();
 	return return_value;
