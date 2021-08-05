@@ -9,29 +9,32 @@ int indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong s
 	slong imax = clamp(degree(ODE) - nu, 0, order(ODE));
 	slong prec = padic_poly_prec(result) + imax;
 
-	padic_poly_t tmpPoly;
-	padic_poly_init2(tmpPoly, order(ODE)+1, prec);
 	padic_poly_fit_length(result, order(ODE)+1);
 
-	padic_t tmpScalar;
-	padic_init2(tmpScalar, prec);
+	padic_t temp1, temp2;
+	padic_init2(temp1, prec);
+	padic_init2(temp2, prec);
 
 	for (; imax >= 0; imax--)
 	{
-		/* Multiply `result` by ((x+shift)-(λ-i)) */
-		padic_set_si(tmpScalar, imax-shift, ctx);
-		padic_poly_scalar_mul_padic(tmpPoly, result, tmpScalar, ctx);
-		padic_poly_shift_left(result, result, 1, ctx);
-		padic_poly_sub(result, result, tmpPoly, ctx);
+		for (slong i = padic_poly_length(result); i >= 1; i--)
+		{
+			padic_set_si(temp1, imax-shift, ctx);
+			padic_poly_get_coeff_padic(temp2, result, i, ctx);
+			padic_mul(temp2, temp2, temp1, ctx);
+			padic_poly_get_coeff_padic(temp1, result, i-1, ctx);
+			padic_add(temp2, temp2, temp1, ctx);
+			padic_poly_set_coeff_padic(result, i, temp2, ctx);
+		}
 
 		/* Add the coefficient of p_i */
-		padic_poly_get_coeff_padic(tmpScalar, result, 0, ctx);
-		padic_add(tmpScalar, padic_ode_coeff(ODE, imax, imax+nu), tmpScalar, ctx);
-		padic_poly_set_coeff_padic(result, 0, tmpScalar, ctx);
+		padic_poly_get_coeff_padic(temp2, result, 0, ctx);
+		padic_add(temp2, padic_ode_coeff(ODE, imax, imax+nu), temp2, ctx);
+		padic_poly_set_coeff_padic(result, 0, temp2, ctx);
 	}
 
-	padic_clear(tmpScalar);
-	padic_poly_clear(tmpPoly);
+	padic_clear(temp1);
+	padic_clear(temp2);
 	return 1;
 }
 
