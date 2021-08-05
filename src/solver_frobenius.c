@@ -23,6 +23,55 @@ void padic_ode_solution_clear (padic_ode_solution_t sol)
 	flint_free(sol->gens);
 }
 
+void _padic_ode_solution_update (padic_ode_solution_t sol, padic_poly_t f, padic_ctx_t ctx)
+{
+	padic_struct *F;
+	padic_t temp1, temp2;
+
+	F = flint_malloc( sol->multiplicity * sizeof(padic_struct));
+	if (F == NULL)
+		return;
+	padic_init(temp1);
+	padic_init(temp2);
+
+	padic_one(temp2);
+
+	for (slong k = 0; k < sol->multiplicity; k++)
+	{
+		padic_init2(F + k, padic_get_prec(sol->rho) * (sol->multiplicity + 8));
+		padic_poly_evaluate_padic(F + k, f, sol->rho, ctx);
+		padic_poly_derivative(f, f, ctx);
+
+		padic_mul(F + k, F + k, temp2, ctx);
+		padic_set_si(temp1, sol->multiplicity - 1 - k, ctx);
+		padic_mul(temp2, temp2, temp1, ctx);
+		padic_set_si(temp1, k + 1, ctx);
+		padic_div(temp2, temp2, temp1, ctx);
+	}
+
+	for (slong n = sol->multiplicity - 1; n >= 0; n--)
+	{
+		padic_poly_scalar_mul_padic(sol->gens + n, sol->gens + n, F + 0, ctx);
+		padic_set_si(temp2, n, ctx);
+		for (slong k = 1; k <= n; k++)
+		{
+			padic_poly_scalar_mul_padic(f, sol->gens + (n - k), F + k, ctx);
+			padic_poly_add(sol->gens + n, sol->gens + n, f, ctx);
+
+			padic_set_si(temp1, n - k, ctx);
+			padic_mul(F + k, F + k, temp1, ctx);
+			padic_div(F + k, F + k, temp2, ctx);
+		}
+		padic_clear(F + n);
+	}
+
+	padic_poly_zero(f);
+
+	padic_clear(temp1);
+	padic_clear(temp2);
+	flint_free(F);
+}
+
 void _padic_ode_solution_extend (padic_ode_solution_t sol, slong nu, padic_poly_t g_nu, padic_ctx_t ctx)
 {
 	padic_t temp;
@@ -33,6 +82,7 @@ void _padic_ode_solution_extend (padic_ode_solution_t sol, slong nu, padic_poly_
 		padic_poly_set_coeff_padic(sol->gens + i, nu, temp, ctx);
 		padic_poly_derivative(g_nu, g_nu, ctx);
 	}
+	padic_poly_zero(g_nu);
 	padic_clear(temp);
 }
 
@@ -164,7 +214,21 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 
 	for (slong nu = 1; nu < sol_degree; nu++)
 	{
-		// pass
+		// calculate g_new
+
+		/* Multiply all relevant g_nu(rho) by f(rho + nu) */
+		indicial_polynomial(indicial, ODE, nu, nu, ctx);
+		for (slong i = 0; i < degree(ODE); i++)
+		{
+			padic_poly_mul(g_rho + i, g_rho + (i + 1), indicial, ctx);
+		}
+		padic_poly_set(g_rho + degree(ODE), g_new, ctx);
+
+		/* Update the G^(i) */
+		_padic_ode_solution_update(sol, indicial, ctx);
+
+		/* Extend the g^(k)_nu */
+		_padic_ode_solution_extend(sol, nu, g_new, ctx);
 	}
 
 	padic_poly_clear(g_new);

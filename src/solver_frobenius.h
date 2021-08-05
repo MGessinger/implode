@@ -20,6 +20,7 @@ void	padic_ode_solution_clear (padic_ode_solution_t sol);
 void	padic_ode_solution_evaluate (padic_t res, padic_ode_solution_t sol, padic_t x, slong mu, padic_ctx_t ctx);
 
 void	_padic_ode_solution_extend (padic_ode_solution_t sol, slong nu, padic_poly_t g_nu, padic_ctx_t ctx);
+void	_padic_ode_solution_update (padic_ode_solution_t sol, padic_poly_t f, padic_ctx_t ctx);
 
 /* =============== Solvers =============== */
 
