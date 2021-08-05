@@ -2,6 +2,7 @@ set(Tests
 	indicial_polynomial
 	indicial_polynomial_eval
 	power_series
+	solution
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/src)

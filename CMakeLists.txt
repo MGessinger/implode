@@ -35,5 +35,3 @@ target_compile_options(padicODE PRIVATE -Wall -Wextra -pedantic)
 
 set_target_properties(padicODE PROPERTIES PUBLIC_HEADER "${CascadeHeaders}")
 set_target_properties(padicODE PROPERTIES VERSION ${PROJECT_VERSION})
-
-install(TARGETS padicODE LIBRARY PUBLIC_HEADER)

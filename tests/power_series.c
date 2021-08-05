@@ -20,7 +20,7 @@ int main ()
 	padic_poly_one(res);
 
 	padic_t rho; padic_init2(rho, prec);
-	padic_ode_solve_frobenius(res, ODE, rho, 32, ctx);
+	_padic_ode_solve_frobenius(res, ODE, rho, 32, ctx);
 
 	int return_value = 0;
 	padic_one(rho);

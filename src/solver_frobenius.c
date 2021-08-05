@@ -1,5 +1,30 @@
 #include "solver_frobenius.h"
 
+/* =============== Solutions =============== */
+
+void padic_ode_solution_init (padic_ode_solution_t sol, padic_t rho, slong mul, slong alpha, padic_ctx_t ctx)
+{
+	sol->multiplicity = mul;
+	sol->alpha = alpha;
+
+	padic_init2(sol->rho, padic_get_prec(rho));
+	padic_set(sol->rho, rho, ctx);
+
+	sol->gens = flint_malloc(mul * sizeof(padic_poly_struct));
+	for (slong i = 0; i < mul; i++)
+		padic_poly_init2(sol->gens + i, 16, padic_get_prec(rho));
+}
+
+void padic_ode_solution_clear (padic_ode_solution_t sol)
+{
+	padic_clear(sol->rho);
+	for (slong i = 0; i < sol->multiplicity; i++)
+		padic_poly_clear(sol->gens + i);
+	flint_free(sol->gens);
+}
+
+/* =============== Solvers =============== */
+
 int indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong shift, padic_ctx_t ctx)
 {
 	/* Compute f_ν(ρ-ς) [for definition of f, see Frobenius Paper, equation 3] */
@@ -70,7 +95,7 @@ int indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, padic_t rho, 
 	return 1;
 }
 
-void padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho, slong sol_degree, padic_ctx_t ctx)
+void _padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho, slong sol_degree, padic_ctx_t ctx)
 {
 	slong prec = padic_get_prec(rho) + sol_degree;
 	padic_t newCoeff, temp, g_nu;
@@ -83,7 +108,7 @@ void padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho, 
 	{
 		padic_zero(newCoeff);
 
-		int shift = 1;
+		slong shift = 1;
 		int abort = 0;
 		while ( !(abort | (shift>nu)) )
 		{

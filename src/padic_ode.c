@@ -1,7 +1,5 @@
 #include "padic_ode.h"
 
-/* Setup and memory management*/
-
 static inline int max_degree (padic_poly_t *polys, slong order)
 {
 	slong deg, poly_max_degree = 0;
@@ -18,12 +16,13 @@ static inline int max_degree (padic_poly_t *polys, slong order)
 		if (poly_max_degree < deg)
 			poly_max_degree = deg;
 	}
-	return deg;
+	return poly_max_degree;
 }
+
+/* Setup and memory management*/
 
 void padic_ode_init_blank (padic_ode_t ODE, slong degree, slong order, slong prec)
 {
-	/* Prepare the Differential equation for later use */
 	ODE->order = order;
 	ODE->degree = degree;
 	ODE->polys = NULL;
@@ -41,7 +40,6 @@ void padic_ode_init_blank (padic_ode_t ODE, slong degree, slong order, slong pre
 
 void padic_ode_init (padic_ode_t ODE, padic_poly_t *polys, slong order, slong prec, padic_ctx_t ctx)
 {
-	/* Create a differential operator defined by *polys* */
 	slong degree = max_degree(polys, order);
 
 	padic_ode_init_blank (ODE, degree, order, prec);
