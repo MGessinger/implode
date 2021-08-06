@@ -28,7 +28,7 @@ void padic_ode_solution_dump (padic_ode_solution_t sol, padic_ctx_t ctx)
 	flint_printf("Solution adjoint to the exponent "); padic_print(sol->rho, ctx); flint_printf(" of multiplicity %w.\n", sol->multiplicity);
 	for (slong i = 0; i < sol->multiplicity; i++)
 	{
-		flint_printf("log(x)^%w *\t", i);
+		flint_printf("log(x)^%w *\t", sol->multiplicity - 1 - i);
 		padic_poly_print_pretty(sol->gens + i, "x", ctx);
 		flint_printf("\n\n");
 	}
@@ -183,7 +183,7 @@ void _padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho,
 	{
 		padic_zero(g_new);
 
-		slong i = clamp(degree(ODE)+1, 1, nu);
+		slong i = clamp(degree(ODE), 1, nu);
 		indicial_polynomial_evaluate(temp, ODE, i, rho, nu-i, ctx);
 		do
 		{
@@ -223,14 +223,14 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 	for (slong i = 0; i <= degree(ODE); i++)
 		padic_poly_init(g_rho + i);
 
-	padic_poly_one(g_rho + 0);
-	_padic_ode_solution_extend(sol, 0, g_rho + 0, ctx);
+	padic_poly_one(g_new);
+	padic_poly_set(g_rho + 0, g_new, ctx);
+	_padic_ode_solution_extend(sol, 0, g_new, ctx);
 
-	for (slong nu = 1; nu < sol_degree; nu++)
+	for (slong nu = 1; nu <= sol_degree; nu++)
 	{
 		/* Compute the new coefficient (as a function of rho) */
-		padic_poly_zero(g_new);
-		slong i = clamp(degree(ODE)+1, 1, nu);
+		slong i = clamp(degree(ODE), 1, nu+1);
 		indicial_polynomial(indicial, ODE, i, nu-i, ctx);
 		do
 		{
@@ -240,7 +240,6 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 			i--;
 			indicial_polynomial(indicial, ODE, i, nu-i, ctx);
 		} while (i > 0);
-		padic_poly_print_pretty(g_new, "x", ctx); flint_printf("\n");
 
 		/* Multiply all relevant g_nu(rho) by f(rho + nu) */
 		for (slong i = 1; i <= degree(ODE); i++)

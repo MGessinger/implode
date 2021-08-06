@@ -2,34 +2,50 @@
 
 int main ()
 {
-	slong p = 13;
+	int return_value = EXIT_SUCCESS;
+	slong p, prec, degree, order;
 
+	flint_rand_t state;
 	padic_ctx_t ctx;
-	padic_t rho;
 	padic_ode_t ODE;
+	padic_t rho;
 	padic_ode_solution_t sol;
 
-	padic_ctx_init(ctx, &p, 0, PADIC_DEFAULT_PREC, PADIC_SERIES);
+	/* Initialization */
+	flint_randinit(state);
 
-	padic_init(rho);
-	padic_set_si(rho, 2, ctx);
-	padic_inv(rho, rho, ctx);
+	p = n_randprime(state, 8, 1);
+	prec = 2 + n_randint(state, 30);
+	degree = 1 + n_randint(state, 9);
+	order = 2 + n_randint(state, degree-2);
+
+	padic_ctx_init(ctx, &p, 0, prec, PADIC_SERIES);
+	padic_init2(rho, prec);
+
+	padic_ode_init_blank(ODE, degree, order, prec);
 	padic_ode_solution_init(sol, rho, 2, 0, ctx);
 
-	padic_ode_init_blank(ODE, 2, 2, PADIC_DEFAULT_PREC);
-	padic_set_si(padic_ode_coeff(ODE, 2, 2), 1, ctx);
-	padic_set_si(padic_ode_coeff(ODE, 0, 0), 4, ctx);
-	padic_inv(padic_ode_coeff(ODE, 0, 0), padic_ode_coeff(ODE, 0, 0), ctx);
+	/* Setup */
+	for (slong i = 0; i <= order(ODE); i++)
+	{
+		padic_zero(padic_ode_coeff(ODE, i, i));
+		for (slong j = i+1; j <= degree(ODE); j++)
+			padic_randtest(padic_ode_coeff(ODE, i, j), state, ctx);
+	}
+	padic_one(padic_ode_coeff(ODE, order, order));
+	padic_set_si(padic_ode_coeff(ODE, order-1, order-1), order-1, ctx);
 
-	padic_ode_dump(ODE, NULL, ctx);
+	padic_ode_solve_frobenius(sol, ODE, 32, ctx);
 
-	padic_ode_solve_frobenius(sol, ODE, 10, ctx);
-
-	padic_ode_solution_dump(sol, ctx);
+	int solved = padic_ode_solves(ODE, sol->gens + 0, 32, prec, ctx);
+	if (!solved)
+		return_value = EXIT_FAILURE;
 
 	padic_ode_clear(ODE);
 	padic_ode_solution_clear(sol);
 	padic_clear(rho);
 	padic_ctx_clear(ctx);
+	flint_randclear(state);
+	flint_cleanup();
 	return EXIT_SUCCESS;
 }

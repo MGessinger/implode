@@ -79,8 +79,9 @@ void padic_ode_set (padic_ode_t ODE_out, padic_ode_t ODE_in, slong prec, padic_c
 void padic_ode_apply (padic_poly_t out, padic_ode_t ODE, padic_poly_t in, slong prec, padic_ctx_t ctx)
 {
 	padic_poly_t deriv, acc;
-	padic_poly_init2(deriv, padic_poly_degree(in), prec*1.414);
-	padic_poly_init2(acc, padic_poly_degree(in), prec*1.414);
+	padic_poly_init2(deriv, padic_poly_degree(in)+1, prec);
+	padic_poly_init2(acc, degree(ODE)+1, prec);
+
 	padic_poly_set(deriv, in, ctx);
 	padic_poly_zero(out);
 	for (slong i = 0; i <= order(ODE); i++)
@@ -106,7 +107,7 @@ int padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, slong prec, 
 
 	padic_init2(coeff, prec);
 	padic_poly_init2(out, deg, prec);
-	padic_ode_apply(out, ODE, res, prec, ctx);
+	padic_ode_apply(out, ODE, res, prec * 3 / 2, ctx);
 	for (slong i = 0; i < deg; i++)
 	{
 		padic_poly_get_coeff_padic(coeff, out, i, ctx);

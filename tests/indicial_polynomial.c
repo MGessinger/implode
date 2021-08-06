@@ -17,7 +17,7 @@ int main () {
 	p = n_randprime(state, 8, 1);
 	degree = 1 + n_randint(state, 9);
 	order = 2 + n_randint(state, degree-2);
-	rho = n_randint(state, 10);
+	rho = n_randint(state, 5);
 
 	padic_init(num);
 	padic_init(exp);
@@ -32,10 +32,10 @@ int main () {
 		for (slong j = i; j <= degree(ODE); j++)
 			padic_randtest(padic_ode_coeff(ODE, i, j), state, ctx);
 
-	padic_poly_one(poly);
-	padic_poly_shift_left(poly, poly, rho, ctx);
+	padic_one(exp);
+	padic_poly_set_coeff_padic(poly, rho, exp, ctx);
 
-	padic_ode_apply(poly, ODE, poly, PADIC_DEFAULT_PREC, ctx);
+	padic_ode_apply(poly, ODE, poly, PADIC_DEFAULT_PREC * 3 / 2, ctx);
 
 	for (slong i = 0; i <= degree(ODE)+1; i++)
 	{
