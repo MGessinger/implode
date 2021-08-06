@@ -2,47 +2,52 @@
 
 int main ()
 {
-	slong p = 13;
-	slong prec = 128;
-	padic_ctx_t ctx;
-	padic_ctx_init(ctx, &p, 0, 16, PADIC_SERIES);
-
-	padic_ode_t ODE;
-	padic_ode_init_blank(ODE, 1, 1, prec);
-	for (int i = 0; i < ODE->alloc; i++)
-	{
-		padic_init2(padic_ode_coeff(ODE, i/2, i%2), prec);
-		padic_set_si(padic_ode_coeff(ODE, i/2, i%2), i%2, ctx);
-	}
-
-	padic_poly_t res;
-	padic_poly_init2(res, 32, prec);
-	padic_poly_one(res);
-
-	padic_t rho; padic_init2(rho, prec);
-	_padic_ode_solve_frobenius(res, ODE, rho, 32, ctx);
-
 	int return_value = EXIT_SUCCESS;
-	padic_one(rho);
-	padic_t err; padic_init2(err, prec);
-	for (int i = 1; i < 32; i++)
+	slong p, prec, degree, order;
+
+	padic_ctx_t ctx;
+	padic_ode_t ODE;
+	padic_t num;
+	padic_poly_t result;
+	flint_rand_t state;
+
+	/* Initialization */
+	flint_randinit(state);
+
+	p = n_randprime(state, 8, 1);
+	prec = 2 + n_randint(state, 62);
+	degree = 1 + n_randint(state, 9);
+	order = 2 + n_randint(state, degree-2);
+
+	padic_ctx_init(ctx, &p, 0, prec, PADIC_SERIES);
+	padic_init2(num, prec);
+	padic_poly_init2(result, 32, prec);
+
+	padic_ode_init_blank(ODE, degree, order, prec);
+
+	/* Setup */
+	for (slong i = 0; i <= order(ODE); i++)
 	{
-		padic_set_si(err, i, ctx);
-		padic_div(rho, rho, err, ctx);
-		padic_poly_get_coeff_padic(err, res, i, ctx);
-		padic_sub(err, rho, err, ctx);
-
-		/* Calculate precision loss:
-		 *                 (big)              (small)          (big)	*/
-		slong mag_err = (padic_val(err) - padic_val(rho)) - padic_prec(rho);
-		return_value |= (mag_err > 1);
+		padic_zero(padic_ode_coeff(ODE, i, i));
+		for (slong j = i+1; j <= degree(ODE); j++)
+			padic_randtest(padic_ode_coeff(ODE, i, j), state, ctx);
 	}
+	padic_one(padic_ode_coeff(ODE, order(ODE), order(ODE)));
+	padic_set_si(num, order(ODE) - 1, ctx);
 
-	padic_clear(rho);
-	padic_clear(err);
+	padic_poly_one(result);
+	_padic_ode_solve_frobenius(result, ODE, num, 32, ctx);
+	padic_poly_shift_left(result, result, order(ODE) - 1, ctx);
+
+	int solved = padic_ode_solves(ODE, result, 30, prec, ctx);
+	if (!solved)
+		return_value = EXIT_FAILURE;
+
+	padic_clear(num);
 	padic_ode_clear(ODE);
+	padic_poly_clear(result);
 	padic_ctx_clear(ctx);
-	padic_poly_clear(res);
+	flint_randclear(state);
 	flint_cleanup();
 	return return_value;
 }

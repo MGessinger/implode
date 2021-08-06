@@ -107,15 +107,13 @@ int padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, slong prec, 
 	padic_init2(coeff, prec);
 	padic_poly_init2(out, deg, prec);
 	padic_ode_apply(out, ODE, res, prec, ctx);
-	padic_ode_dump(ODE, NULL, ctx);
-	for (slong i = order(ODE); i < deg; i++)
+	for (slong i = 0; i < deg; i++)
 	{
 		padic_poly_get_coeff_padic(coeff, out, i, ctx);
-		padic_print(coeff,  ctx);
-		flint_printf("\n");
 		if (!padic_is_zero(coeff))
 		{
 			solved = 0;
+			break;
 		}
 	}
 

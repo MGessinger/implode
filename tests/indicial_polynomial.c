@@ -14,7 +14,7 @@ int main () {
 	/* Initialization */
 	flint_randinit(state);
 
-	p = 7;
+	p = n_randprime(state, 8, 1);
 	degree = 1 + n_randint(state, 9);
 	order = 2 + n_randint(state, degree-2);
 	rho = n_randint(state, 10);
@@ -43,7 +43,7 @@ int main () {
 
 		/* Directly compute the "indicial coefficient" */
 		padic_set_si(num, rho, ctx);
-		indicial_polynomial_evaluate(num, ODE, num, 0, i, ctx);
+		indicial_polynomial_evaluate(num, ODE, i, num, 0, ctx);
 		if (!padic_equal(num, exp))
 		{
 			return_value = EXIT_FAILURE;
@@ -62,7 +62,7 @@ int main () {
 
 		/* Compute f(0 + rho) instead of f(rho + 0) */
 		padic_zero(num);
-		indicial_polynomial_evaluate(num, ODE, num, rho, i, ctx);
+		indicial_polynomial_evaluate(num, ODE, i, num, rho, ctx);
 		if (!padic_equal(num, exp))
 		{
 			return_value = EXIT_FAILURE;
