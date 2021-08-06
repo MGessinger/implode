@@ -1,9 +1,10 @@
 set(Tests
 	indicial_polynomial
 	indicial_polynomial_eval
-	power_series
+	power_series_singleton
 	solution_extend
 	solution_update
+	power_series_frobenius
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/src)

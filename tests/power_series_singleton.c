@@ -22,7 +22,7 @@ int main ()
 	padic_t rho; padic_init2(rho, prec);
 	_padic_ode_solve_frobenius(res, ODE, rho, 32, ctx);
 
-	int return_value = 0;
+	int return_value = EXIT_SUCCESS;
 	padic_one(rho);
 	padic_t err; padic_init2(err, prec);
 	for (int i = 1; i < 32; i++)
@@ -43,5 +43,6 @@ int main ()
 	padic_ode_clear(ODE);
 	padic_ctx_clear(ctx);
 	padic_poly_clear(res);
+	flint_cleanup();
 	return return_value;
 }

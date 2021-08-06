@@ -16,9 +16,9 @@ int main () {
 	/* Test the computation of indicial equation */
 	padic_poly_t res; padic_poly_init(res);
 	indicial_polynomial(res, ODE, 0, 0, ctx);
-	int return_value = 0;
+	int return_value = EXIT_SUCCESS;
 	if (padic_poly_degree(res) != 2)
-		return_value = 1;
+		return_value = EXIT_FAILURE;
 
 	/* Memory Cleanup */
 	padic_poly_clear(res);

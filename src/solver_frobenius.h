@@ -16,6 +16,7 @@ typedef padic_ode_solution_struct padic_ode_solution_t[1];
 
 void	padic_ode_solution_init (padic_ode_solution_t sol, padic_t rho, slong mul, slong alpha, padic_ctx_t ctx);
 void	padic_ode_solution_clear (padic_ode_solution_t sol);
+void	padic_ode_solution_dump (padic_ode_solution_t sol, padic_ctx_t ctx);
 
 void	padic_ode_solution_evaluate (padic_t res, padic_ode_solution_t sol, padic_t x, slong mu, padic_ctx_t ctx);
 

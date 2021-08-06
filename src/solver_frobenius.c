@@ -23,6 +23,18 @@ void padic_ode_solution_clear (padic_ode_solution_t sol)
 	flint_free(sol->gens);
 }
 
+void padic_ode_solution_dump (padic_ode_solution_t sol, padic_ctx_t ctx)
+{
+	flint_printf("Solution adjoint to the exponent "); padic_print(sol->rho, ctx); flint_printf(" of multiplicity %w.\n", sol->multiplicity);
+	for (slong i = 0; i < sol->multiplicity; i++)
+	{
+		flint_printf("log(x)^%w *\t", i);
+		padic_poly_print_pretty(sol->gens + i, "x", ctx);
+		flint_printf("\n\n");
+	}
+	flint_printf("\n");
+}
+
 void _padic_ode_solution_update (padic_ode_solution_t sol, padic_poly_t f, padic_ctx_t ctx)
 {
 	padic_struct *F;
@@ -111,13 +123,15 @@ int indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong s
 			padic_poly_get_coeff_padic(temp2, result, i, ctx);
 			padic_mul(temp2, temp2, temp1, ctx);
 			padic_poly_get_coeff_padic(temp1, result, i-1, ctx);
-			padic_add(temp2, temp2, temp1, ctx);
+			padic_sub(temp2, temp1, temp2, ctx);
 			padic_poly_set_coeff_padic(result, i, temp2, ctx);
 		}
 
 		/* Add the coefficient of p_i */
+		padic_set_si(temp1, imax-shift, ctx);
 		padic_poly_get_coeff_padic(temp2, result, 0, ctx);
-		padic_add(temp2, padic_ode_coeff(ODE, imax, imax+nu), temp2, ctx);
+		padic_mul(temp2, temp2, temp1, ctx);
+		padic_sub(temp2, padic_ode_coeff(ODE, imax, imax+nu), temp2, ctx);
 		padic_poly_set_coeff_padic(result, 0, temp2, ctx);
 	}
 
@@ -139,7 +153,7 @@ int indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, padic_t rho, 
 
 	padic_t temp1;
 	padic_init2(temp1, prec);
-	padic_set_si(temp1, imax+shift, ctx);
+	padic_set_si(temp1, imax-shift, ctx);
 	padic_sub(temp1, rho, temp1, ctx);
 
 	padic_t const_one;
@@ -161,6 +175,7 @@ int indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, padic_t rho, 
 void _padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho, slong sol_degree, padic_ctx_t ctx)
 {
 	slong prec = padic_get_prec(rho) + sol_degree;
+	int abort;
 	padic_t newCoeff, temp, g_nu;
 	padic_init2(newCoeff, prec);
 	padic_init2(temp, prec);
@@ -171,16 +186,15 @@ void _padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho,
 	{
 		padic_zero(newCoeff);
 
-		slong shift = 1;
-		int abort = 0;
-		while ( !(abort | (shift>nu)) )
+		slong i = 1;
+		do
 		{
-			abort = indicial_polynomial_evaluate(temp, ODE, rho, nu-shift, shift, ctx);
-			padic_poly_get_coeff_padic(g_nu, res, nu-shift, ctx);
+			abort = indicial_polynomial_evaluate(temp, ODE, rho, nu-i, i, ctx);
+			padic_poly_get_coeff_padic(g_nu, res, nu-i, ctx);
 			padic_mul(temp, temp, g_nu, ctx);
 			padic_sub(newCoeff, newCoeff, temp, ctx);
-			shift++;
-		}
+			i++;
+		} while ( !(abort | (i>nu)) );
 		indicial_polynomial_evaluate(temp, ODE, rho, nu, 0, ctx);
 		padic_div(newCoeff, newCoeff, temp, ctx);
 		padic_poly_set_coeff_padic(res, nu, newCoeff, ctx);
@@ -200,7 +214,10 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 
 	padic_poly_t indicial;
 	padic_poly_t g_new;
-	padic_poly_struct *g_rho = flint_malloc( (degree(ODE)+1) * sizeof(padic_poly_struct) );
+	padic_poly_struct *g_rho;
+	slong shift, abort;
+
+	g_rho = flint_malloc( (degree(ODE)+1) * sizeof(padic_poly_struct) );
 	if (g_rho == NULL)
 		return;
 
@@ -214,15 +231,24 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 
 	for (slong nu = 1; nu < sol_degree; nu++)
 	{
-		// calculate g_new
+		/* Compute the new coefficient (as a function of rho) */
+		padic_poly_zero(g_new);
+		shift = 1;
+		do
+		{
+			abort = indicial_polynomial(indicial, ODE, shift, nu-shift, ctx);
+			padic_poly_mul(indicial, indicial, g_rho + shift, ctx);
+			padic_poly_sub(g_new, g_new, indicial, ctx);
+			shift++;
+		} while ( !(abort | (shift>nu)) );
 
 		/* Multiply all relevant g_nu(rho) by f(rho + nu) */
 		indicial_polynomial(indicial, ODE, nu, nu, ctx);
-		for (slong i = 0; i < degree(ODE); i++)
+		for (slong i = 1; i <= degree(ODE); i++)
 		{
-			padic_poly_mul(g_rho + i, g_rho + (i + 1), indicial, ctx);
+			padic_poly_mul(g_rho + i, g_rho + (i - 1), indicial, ctx);
 		}
-		padic_poly_set(g_rho + degree(ODE), g_new, ctx);
+		padic_poly_set(g_rho + 0, g_new, ctx);
 
 		/* Update the G^(i) */
 		_padic_ode_solution_update(sol, indicial, ctx);
