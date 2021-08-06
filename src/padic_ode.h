@@ -31,6 +31,10 @@ void	padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx);
 slong	padic_ode_reduce (padic_ode_t ODE);
 slong	padic_ode_valuation (padic_ode_t ODE);
 
+/* Differential Action */
+void	padic_ode_apply (padic_poly_t out, padic_ode_t ODE, padic_poly_t in, slong prec, padic_ctx_t ctx);
+int	padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, slong prec, padic_ctx_t ctx);
+
 static inline slong clamp (slong in, slong min, slong max)
 {
 	if (in < min)

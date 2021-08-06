@@ -1,6 +1,5 @@
 set(Tests
 	indicial_polynomial
-	indicial_polynomial_eval
 	power_series_singleton
 	solution_extend
 	solution_update

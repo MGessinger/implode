@@ -2,28 +2,92 @@
 #include "solver_frobenius.h"
 
 int main () {
-	slong p = 7;
-	padic_ctx_t ctx; padic_ctx_init(ctx, &p, 0, 16, PADIC_SERIES);
-
-	/* Initialize the ODE */
-	padic_ode_t ODE;
-	padic_ode_init_blank(ODE, 2, 2, 20);
-
-	padic_set_si(padic_ode_coeff(ODE, 0, 0), 1, ctx);
-	padic_set_si(padic_ode_coeff(ODE, 1, 1), 2, ctx);
-	padic_set_si(padic_ode_coeff(ODE, 2, 2), 1, ctx);
-
-	/* Test the computation of indicial equation */
-	padic_poly_t res; padic_poly_init(res);
-	indicial_polynomial(res, ODE, 0, 0, ctx);
 	int return_value = EXIT_SUCCESS;
-	if (padic_poly_degree(res) != 2)
-		return_value = EXIT_FAILURE;
+	slong p, degree, order, rho;
+
+	padic_ctx_t ctx;
+	padic_t num, exp;
+	padic_ode_t ODE;
+	padic_poly_t poly, indicial;
+	flint_rand_t state;
+
+	/* Initialization */
+	flint_randinit(state);
+
+	p = 7;
+	degree = 1 + n_randint(state, 9);
+	order = 2 + n_randint(state, degree-2);
+	rho = n_randint(state, 10);
+
+	padic_init(num);
+	padic_init(exp);
+
+	padic_ctx_init(ctx, &p, 0, PADIC_DEFAULT_PREC, PADIC_SERIES);
+	padic_poly_init(poly);
+	padic_poly_init(indicial);
+
+	/* Setup */
+	padic_ode_init_blank(ODE, degree, order, PADIC_DEFAULT_PREC);
+	for (slong i = 0; i <= order(ODE); i++)
+		for (slong j = i; j <= degree(ODE); j++)
+			padic_randtest(padic_ode_coeff(ODE, i, j), state, ctx);
+
+	padic_poly_one(poly);
+	padic_poly_shift_left(poly, poly, rho, ctx);
+
+	padic_ode_apply(poly, ODE, poly, PADIC_DEFAULT_PREC, ctx);
+
+	for (slong i = 0; i <= degree(ODE)+1; i++)
+	{
+		padic_poly_get_coeff_padic(exp, poly, rho+i, ctx);
+
+		/* Directly compute the "indicial coefficient" */
+		padic_set_si(num, rho, ctx);
+		indicial_polynomial_evaluate(num, ODE, num, 0, i, ctx);
+		if (!padic_equal(num, exp))
+		{
+			return_value = EXIT_FAILURE;
+			break;
+		}
+
+		/* Compare to indicial polynomial */
+		padic_set_si(num, rho, ctx);
+		indicial_polynomial(indicial, ODE, i, 0, ctx);
+		padic_poly_evaluate_padic(num, indicial, num, ctx);
+		if (!padic_equal(num, exp))
+		{
+			return_value = EXIT_FAILURE;
+			break;
+		}
+
+		/* Compute f(0 + rho) instead of f(rho + 0) */
+		padic_zero(num);
+		indicial_polynomial_evaluate(num, ODE, num, rho, i, ctx);
+		if (!padic_equal(num, exp))
+		{
+			return_value = EXIT_FAILURE;
+			break;
+		}
+
+		/* Again, compare to indicial polynomial */
+		padic_zero(num);
+		indicial_polynomial(indicial, ODE, i, rho, ctx);
+		padic_poly_evaluate_padic(num, indicial, num, ctx);
+		if (!padic_equal(num, exp))
+		{
+			return_value = EXIT_FAILURE;
+			break;
+		}
+	}
 
 	/* Memory Cleanup */
-	padic_poly_clear(res);
-	padic_ode_clear(ODE);
+	padic_poly_clear(poly);
+	padic_poly_clear(indicial);
+	padic_clear(num);
+	padic_clear(exp);
 	padic_ctx_clear(ctx);
+	padic_ode_clear(ODE);
+	flint_randclear(state);
 	flint_cleanup();
 	return return_value;
 }

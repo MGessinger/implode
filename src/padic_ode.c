@@ -74,6 +74,57 @@ void padic_ode_set (padic_ode_t ODE_out, padic_ode_t ODE_in, slong prec, padic_c
 		padic_set(ODE_out->polys + i, ODE_in->polys + i, ctx);
 }
 
+/* Differential action */
+
+void padic_ode_apply (padic_poly_t out, padic_ode_t ODE, padic_poly_t in, slong prec, padic_ctx_t ctx)
+{
+	padic_poly_t deriv, acc;
+	padic_poly_init2(deriv, padic_poly_degree(in), prec*1.414);
+	padic_poly_init2(acc, padic_poly_degree(in), prec*1.414);
+	padic_poly_set(deriv, in, ctx);
+	padic_poly_zero(out);
+	for (slong i = 0; i <= order(ODE); i++)
+	{
+		padic_poly_zero(acc);
+		for (slong j = 0; j <= degree(ODE); j++)
+			padic_poly_set_coeff_padic(acc, j, padic_ode_coeff(ODE, i, j), ctx);
+
+		padic_poly_mul(acc, acc, deriv, ctx);
+		padic_poly_add(out, out, acc, ctx);
+
+		padic_poly_derivative(deriv, deriv, ctx);
+	}
+	padic_poly_clear(deriv);
+	padic_poly_clear(acc);
+}
+
+int padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, slong prec, padic_ctx_t ctx)
+{
+	int solved = 1;
+	padic_t coeff;
+	padic_poly_t out;
+
+	padic_init2(coeff, prec);
+	padic_poly_init2(out, deg, prec);
+	padic_ode_apply(out, ODE, res, prec, ctx);
+	padic_ode_dump(ODE, NULL, ctx);
+	for (slong i = order(ODE); i < deg; i++)
+	{
+		padic_poly_get_coeff_padic(coeff, out, i, ctx);
+		padic_print(coeff,  ctx);
+		flint_printf("\n");
+		if (!padic_is_zero(coeff))
+		{
+			solved = 0;
+		}
+	}
+
+	padic_poly_clear(out);
+	padic_clear(coeff);
+	return solved;
+}
+
+/* I/O */
 void padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx)
 {
 	/* Dumps the ODE to file. If file is NULL, dump to stdout */

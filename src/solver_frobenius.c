@@ -106,37 +106,35 @@ int indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong s
 	padic_poly_zero(result);
 	if (nu > degree(ODE))
 		return 0;
-	slong imax = clamp(degree(ODE) - nu, 0, order(ODE));
-	slong prec = padic_poly_prec(result) + imax;
+	slong prec = padic_poly_prec(result) + order(ODE);
+
+	padic_t temp1;
+	padic_poly_t horner;
+
+	padic_init2(temp1, prec);
+	padic_poly_init2(horner, 2, prec);
+
+	padic_one(temp1);
+	padic_poly_set_coeff_padic(horner, 1, temp1, ctx);
 
 	padic_poly_fit_length(result, order(ODE)+1);
 
-	padic_t temp1, temp2;
-	padic_init2(temp1, prec);
-	padic_init2(temp2, prec);
-
-	for (; imax >= 0; imax--)
+	for (slong lambda = order(ODE); lambda >= 0; lambda--)
 	{
-		for (slong i = padic_poly_length(result); i >= 1; i--)
-		{
-			padic_set_si(temp1, imax-shift, ctx);
-			padic_poly_get_coeff_padic(temp2, result, i, ctx);
-			padic_mul(temp2, temp2, temp1, ctx);
-			padic_poly_get_coeff_padic(temp1, result, i-1, ctx);
-			padic_sub(temp2, temp1, temp2, ctx);
-			padic_poly_set_coeff_padic(result, i, temp2, ctx);
-		}
+		padic_set_si(temp1, shift - lambda, ctx);
+		padic_poly_set_coeff_padic(horner, 0, temp1, ctx);
+		padic_poly_mul(result, result, horner, ctx);
 
-		/* Add the coefficient of p_i */
-		padic_set_si(temp1, imax-shift, ctx);
-		padic_poly_get_coeff_padic(temp2, result, 0, ctx);
-		padic_mul(temp2, temp2, temp1, ctx);
-		padic_sub(temp2, padic_ode_coeff(ODE, imax, imax+nu), temp2, ctx);
-		padic_poly_set_coeff_padic(result, 0, temp2, ctx);
+		if (lambda + nu <= degree(ODE))
+		{
+			padic_poly_get_coeff_padic(temp1, result, 0, ctx);
+			padic_add(temp1, temp1, padic_ode_coeff(ODE, lambda, lambda + nu), ctx);
+			padic_poly_set_coeff_padic(result, 0, temp1, ctx);
+		}
 	}
 
 	padic_clear(temp1);
-	padic_clear(temp2);
+	padic_poly_clear(horner);
 	return 1;
 }
 
@@ -148,24 +146,24 @@ int indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, padic_t rho, 
 		return 0;
 	}
 
-	slong imax = clamp(degree(ODE) - nu, 0, order(ODE));
-	slong prec = padic_get_prec(rho) + imax;
+	slong prec = padic_get_prec(rho) + order(ODE);
 
 	padic_t temp1;
 	padic_init2(temp1, prec);
-	padic_set_si(temp1, imax-shift, ctx);
-	padic_sub(temp1, rho, temp1, ctx);
+	padic_set_si(temp1, shift - order(ODE), ctx);
+	padic_add(temp1, rho, temp1, ctx);
 
 	padic_t const_one;
 	padic_init2(const_one, prec);
 	padic_one(const_one);
 
 	padic_zero(result);
-	for (; imax >= 0; imax--)
+	for (slong lambda = order(ODE); lambda >= 0; lambda--)
 	{
 		padic_mul(result, result, temp1, ctx);
 		padic_add(temp1, temp1, const_one, ctx);
-		padic_add(result, result, padic_ode_coeff(ODE, imax, imax+nu), ctx);
+		if (lambda + nu <= degree(ODE))
+			padic_add(result, result, padic_ode_coeff(ODE, lambda, lambda+nu), ctx);
 	}
 	padic_clear(temp1);
 	padic_clear(const_one);
@@ -181,8 +179,8 @@ void _padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho,
 	padic_init2(temp, prec);
 	padic_init2(g_nu, prec);
 
-	padic_poly_fit_length(res, sol_degree);
-	for (slong nu = order(ODE); nu < sol_degree; nu++)
+	padic_poly_fit_length(res, sol_degree+1);
+	for (slong nu = order(ODE); nu <= sol_degree; nu++)
 	{
 		padic_zero(newCoeff);
 
