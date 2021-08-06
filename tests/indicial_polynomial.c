@@ -14,79 +14,84 @@ int main () {
 	/* Initialization */
 	flint_randinit(state);
 
-	p = n_randprime(state, 8, 1);
-	degree = 1 + n_randint(state, 9);
-	order = 2 + n_randint(state, degree-2);
-	rho = n_randint(state, 5);
-
-	padic_init(num);
-	padic_init(exp);
-
-	padic_ctx_init(ctx, &p, 0, PADIC_DEFAULT_PREC, PADIC_SERIES);
-	padic_poly_init(poly);
-	padic_poly_init(indicial);
-
-	/* Setup */
-	padic_ode_init_blank(ODE, degree, order, PADIC_DEFAULT_PREC);
-	for (slong i = 0; i <= order(ODE); i++)
-		for (slong j = i; j <= degree(ODE); j++)
-			padic_randtest(padic_ode_coeff(ODE, i, j), state, ctx);
-
-	padic_one(exp);
-	padic_poly_set_coeff_padic(poly, rho, exp, ctx);
-
-	padic_ode_apply(poly, ODE, poly, PADIC_DEFAULT_PREC * 3 / 2, ctx);
-
-	for (slong i = 0; i <= degree(ODE)+1; i++)
+	for (slong iter = 0; iter < 100; iter++)
 	{
-		padic_poly_get_coeff_padic(exp, poly, rho+i, ctx);
+		p = n_randprime(state, 8, 1);
+		rho = n_randint(state, 5);
+		degree = 2 + n_randint(state, 8);
+		order = n_randint(state, degree);
+		if (order <= 0)
+			order = 2;
 
-		/* Directly compute the "indicial coefficient" */
-		padic_set_si(num, rho, ctx);
-		indicial_polynomial_evaluate(num, ODE, i, num, 0, ctx);
-		if (!padic_equal(num, exp))
+		padic_init(num);
+		padic_init(exp);
+
+		padic_ctx_init(ctx, &p, 0, PADIC_DEFAULT_PREC, PADIC_SERIES);
+		padic_poly_init(poly);
+		padic_poly_init(indicial);
+
+		/* Setup */
+		padic_ode_init_blank(ODE, degree, order, PADIC_DEFAULT_PREC);
+		for (slong i = 0; i <= order(ODE); i++)
+			for (slong j = i; j <= degree(ODE); j++)
+				padic_randtest(padic_ode_coeff(ODE, i, j), state, ctx);
+
+		padic_one(exp);
+		padic_poly_set_coeff_padic(poly, rho, exp, ctx);
+
+		padic_ode_apply(poly, ODE, poly, PADIC_DEFAULT_PREC * 3 / 2, ctx);
+
+		for (slong i = 0; i <= degree(ODE)+1; i++)
 		{
-			return_value = EXIT_FAILURE;
-			break;
+			padic_poly_get_coeff_padic(exp, poly, rho+i, ctx);
+
+			/* Directly compute the "indicial coefficient" */
+			padic_set_si(num, rho, ctx);
+			indicial_polynomial_evaluate(num, ODE, i, num, 0, ctx);
+			if (!padic_equal(num, exp))
+			{
+				return_value = EXIT_FAILURE;
+				break;
+			}
+
+			/* Compare to indicial polynomial */
+			padic_set_si(num, rho, ctx);
+			indicial_polynomial(indicial, ODE, i, 0, ctx);
+			padic_poly_evaluate_padic(num, indicial, num, ctx);
+			if (!padic_equal(num, exp))
+			{
+				return_value = EXIT_FAILURE;
+				break;
+			}
+
+			/* Compute f(0 + rho) instead of f(rho + 0) */
+			padic_zero(num);
+			indicial_polynomial_evaluate(num, ODE, i, num, rho, ctx);
+			if (!padic_equal(num, exp))
+			{
+				return_value = EXIT_FAILURE;
+				break;
+			}
+
+			/* Again, compare to indicial polynomial */
+			padic_zero(num);
+			indicial_polynomial(indicial, ODE, i, rho, ctx);
+			padic_poly_evaluate_padic(num, indicial, num, ctx);
+			if (!padic_equal(num, exp))
+			{
+				return_value = EXIT_FAILURE;
+				break;
+			}
 		}
 
-		/* Compare to indicial polynomial */
-		padic_set_si(num, rho, ctx);
-		indicial_polynomial(indicial, ODE, i, 0, ctx);
-		padic_poly_evaluate_padic(num, indicial, num, ctx);
-		if (!padic_equal(num, exp))
-		{
-			return_value = EXIT_FAILURE;
-			break;
-		}
-
-		/* Compute f(0 + rho) instead of f(rho + 0) */
-		padic_zero(num);
-		indicial_polynomial_evaluate(num, ODE, i, num, rho, ctx);
-		if (!padic_equal(num, exp))
-		{
-			return_value = EXIT_FAILURE;
-			break;
-		}
-
-		/* Again, compare to indicial polynomial */
-		padic_zero(num);
-		indicial_polynomial(indicial, ODE, i, rho, ctx);
-		padic_poly_evaluate_padic(num, indicial, num, ctx);
-		if (!padic_equal(num, exp))
-		{
-			return_value = EXIT_FAILURE;
-			break;
-		}
+		/* Memory Cleanup */
+		padic_poly_clear(poly);
+		padic_poly_clear(indicial);
+		padic_clear(num);
+		padic_clear(exp);
+		padic_ctx_clear(ctx);
+		padic_ode_clear(ODE);
 	}
-
-	/* Memory Cleanup */
-	padic_poly_clear(poly);
-	padic_poly_clear(indicial);
-	padic_clear(num);
-	padic_clear(exp);
-	padic_ctx_clear(ctx);
-	padic_ode_clear(ODE);
 	flint_randclear(state);
 	flint_cleanup();
 	return return_value;
