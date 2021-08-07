@@ -146,3 +146,18 @@ void padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx)
 	if (out != stdout)
 		fclose(out);
 }
+
+slong padic_ode_valuation (padic_ode_t ODE)
+{
+	slong val = 0;
+	for (int i = 0; i <= order(ODE); i++)
+	{
+		slong v = i;
+		while (padic_is_zero(padic_ode_coeff(ODE, i, i-v)))
+			v--;
+
+		if (v > val)
+			val = v;
+	}
+	return val;
+}

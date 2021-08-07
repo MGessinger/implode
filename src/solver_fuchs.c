@@ -1,19 +1,4 @@
-#include "solver_fuchs.h"
-
-slong padic_ode_valuation (padic_ode_t ODE)
-{
-	slong val = 0;
-	for (int i = 0; i <= order(ODE); i++)
-	{
-		slong v = i;
-		while (padic_is_zero(padic_ode_coeff(ODE, i, i-v)))
-			v--;
-
-		if (v > val)
-			val = v;
-	}
-	return val;
-}
+#include "padic_ode_solver.h"
 
 slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coeffs, padic_ctx_t ctx)
 {

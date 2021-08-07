@@ -19,14 +19,14 @@ add_subdirectory(tests)
 
 set(padicSrc
 	src/padic_ode.c
+	src/padic_ode_solution.c
 	src/solver_fuchs.c
 	src/solver_frobenius.c
 )
 
 set(padicHeaders
 	src/padic_ode.h
-	src/solver_fuchs.h
-	src/solver_frobenius.h
+	src/padic_ode_solver.h
 )
 
 add_library(padicODE SHARED ${padicSrc})
