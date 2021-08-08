@@ -7,7 +7,7 @@ int main ()
 	padic_ode_solution_t sol;
 	padic_ctx_t ctx;
 	padic_poly_t f, g;
-	padic_poly_struct *H;
+	padic_poly_struct H[10];
 	padic_t rho, val;
 	slong p, n, prec;
 
@@ -17,7 +17,8 @@ int main ()
 	for (slong iter = 0; iter < 100; iter++)
 	{
 		n = n_randint(state, 10);
-		prec = n_randint(state, 64);
+		p = n_randprime(state, 8, 1);
+		prec = 2 + n_randint(state, 30);
 
 		padic_ctx_init(ctx, &p, 0, 16, PADIC_SERIES);
 		padic_init2(rho, prec);
