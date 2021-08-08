@@ -4,7 +4,7 @@ int main ()
 {
 	/* Init */
 	int return_value = EXIT_SUCCESS;
-	slong p, n;
+	slong p, n, prec;
 	padic_ode_solution_t sol;
 	padic_ctx_t ctx;
 	padic_poly_t f, g;
@@ -17,12 +17,13 @@ int main ()
 	{
 		p = n_randprime(state, 8, 1);
 		n = n_randint(state, 10);
+		prec = 2 + n_randint(state, 62);
 
-		padic_ctx_init(ctx, &p, 0, 16, PADIC_SERIES);
-		padic_init(rho);
-		padic_init(val);
-		padic_poly_init(f);
-		padic_poly_init(g);
+		padic_ctx_init(ctx, &p, 0, prec, PADIC_SERIES);
+		padic_init2(rho, prec);
+		padic_init2(val, prec);
+		padic_poly_init2(f, 20, prec);
+		padic_poly_init2(g, 20, prec);
 
 		/* Test */
 		padic_randtest(rho, state, ctx);

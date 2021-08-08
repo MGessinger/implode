@@ -7,11 +7,15 @@ void assert_equal (const char *errMsg, padic_t exp, padic_t real, padic_ctx_t ct
 	padic_t err;
 	padic_init2(err, prec);
 	padic_sub(err, real, exp, ctx);
-	if (!padic_is_zero(err))
+
+	if (padic_is_zero(err))
+		return;
+
+	slong precision_loss = padic_get_val(err) - padic_get_val(exp);
+	if (precision_loss < prec)
 	{
 		flint_printf("%s failed in precision %w\n", errMsg, prec);
-		flint_printf("Expected output: "); padic_print(exp, ctx); flint_printf("\n");
-		flint_printf("Actual output: "); padic_print(real, ctx); flint_printf("\n");
+		flint_printf("Precision loss: %w\n", prec - padic_val(err));
 		flint_printf("Error: "); padic_print(err, ctx); flint_printf("\n\n");
 		flint_abort();
 	}
@@ -33,7 +37,7 @@ int main () {
 	{
 		p = n_randprime(state, 8, 1);
 		rho = n_randint(state, 5);
-		prec = 2 + n_randint(state, 30);
+		prec = 2 + n_randint(state, 62);
 		degree = 2 + n_randint(state, 8);
 		order = n_randint(state, degree);
 		if (order <= 0)
@@ -43,8 +47,8 @@ int main () {
 		padic_init2(exp, prec);
 
 		padic_ctx_init(ctx, &p, 0, prec, PADIC_SERIES);
-		padic_poly_init(poly);
-		padic_poly_init(indicial);
+		padic_poly_init2(poly, 16, prec);
+		padic_poly_init2(indicial, 16, prec);
 
 		/* Setup */
 		padic_ode_init_blank(ODE, degree, order, prec);

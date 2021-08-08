@@ -18,7 +18,7 @@ int main ()
 	{
 		n = n_randint(state, 10);
 		p = n_randprime(state, 8, 1);
-		prec = 2 + n_randint(state, 30);
+		prec = 2 + n_randint(state, 62);
 
 		padic_ctx_init(ctx, &p, 0, 16, PADIC_SERIES);
 		padic_init2(rho, prec);

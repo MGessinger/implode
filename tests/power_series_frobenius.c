@@ -17,7 +17,7 @@ int main ()
 	for (slong iter = 0; iter < 100; iter++)
 	{
 		p = n_randprime(state, 8, 1);
-		prec = 2 + n_randint(state, 30);
+		prec = 2 + n_randint(state, 62);
 		degree = 2 + n_randint(state, 8);
 		order = n_randint(state, degree);
 		if (order <= 0)
