@@ -113,6 +113,9 @@ int padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, slong prec, 
 		padic_poly_get_coeff_padic(coeff, out, i, ctx);
 		if (!padic_is_zero(coeff))
 		{
+			flint_printf("Coefficient %w/%w is non-zero:\n", i, deg);
+			padic_print(coeff, ctx);
+			flint_printf("\nThe precision was %w.\n", prec);
 			solved = 0;
 			break;
 		}
