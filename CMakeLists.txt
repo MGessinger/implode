@@ -20,8 +20,8 @@ add_subdirectory(tests)
 set(padicSrc
 	src/padic_ode.c
 	src/padic_ode_solution.c
-	src/solver_fuchs.c
-	src/solver_frobenius.c
+	src/fuchs_solver.c
+	src/frobenius_solver.c
 )
 
 set(padicHeaders
