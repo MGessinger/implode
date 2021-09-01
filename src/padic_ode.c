@@ -99,12 +99,13 @@ void padic_ode_apply (padic_poly_t out, padic_ode_t ODE, padic_poly_t in, slong 
 	padic_poly_clear(acc);
 }
 
-int padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, slong prec, padic_ctx_t ctx)
+int padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, padic_ctx_t ctx)
 {
 	int solved = 1;
 	padic_t coeff;
 	padic_poly_t out;
 
+	slong prec = padic_poly_prec(res);
 	padic_init2(coeff, prec);
 	padic_poly_init2(out, deg, prec);
 	padic_ode_apply(out, ODE, res, prec * 3 / 2, ctx);

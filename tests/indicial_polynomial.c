@@ -3,22 +3,14 @@
 
 void assert_equal (const char *errMsg, padic_t exp, padic_t real, padic_ctx_t ctx)
 {
-	slong prec = padic_prec(real);
-	padic_t err;
-	padic_init2(err, prec);
-	padic_sub(err, real, exp, ctx);
-
-	if (padic_is_zero(err))
+	padic_sub(real, exp, real, ctx);
+	if (padic_is_zero(real))
 		return;
 
-	slong precision_loss = padic_get_val(err) - padic_get_val(exp);
-	if (precision_loss < prec)
-	{
-		flint_printf("%s failed in precision %w\n", errMsg, prec);
-		flint_printf("Precision loss: %w\n", prec - padic_val(err));
-		flint_printf("Error: "); padic_print(err, ctx); flint_printf("\n\n");
-		flint_abort();
-	}
+	flint_printf("%s failed in precision %w\n", errMsg, padic_prec(exp));
+	flint_printf("Expected: "); padic_print(exp, ctx); flint_printf("\n");
+	flint_printf("Error: "); padic_print(real, ctx); flint_printf("\n\n");
+	flint_abort();
 }
 
 int main () {
@@ -59,7 +51,7 @@ int main () {
 		padic_one(exp);
 		padic_poly_set_coeff_padic(poly, rho, exp, ctx);
 
-		padic_ode_apply(poly, ODE, poly, prec * 3, ctx);
+		padic_ode_apply(poly, ODE, poly, prec, ctx);
 
 		for (slong i = 0; i <= degree(ODE)+1; i++)
 		{

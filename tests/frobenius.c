@@ -18,7 +18,7 @@ int main ()
 	{
 		p = n_randprime(state, 8, 1);
 		n = 2 + n_randint(state, 62);
-		prec = 30 + n_randint(state, 128);
+		prec = 2 + n_randint(state, 128);
 		degree = 3 + n_randint(state, 7);
 		order = 2 + n_randint(state, degree-2);
 
@@ -27,11 +27,10 @@ int main ()
 
 		s_rho = order - 2;
 		padic_set_si(rho, s_rho, ctx);
-
-		padic_ode_init_blank(ODE, degree, order, prec);
 		padic_ode_solution_init(sol, rho, 2, 0, ctx);
 
 		/* Setup */
+		padic_ode_init_blank(ODE, degree, order, prec);
 		for (slong i = 0; i <= order(ODE); i++)
 			for (slong j = i+1; j <= degree(ODE); j++)
 				padic_randtest(padic_ode_coeff(ODE, i, j), state, ctx);
@@ -40,7 +39,7 @@ int main ()
 
 		padic_ode_solve_frobenius(sol, ODE, n, ctx);
 		padic_poly_shift_left(sol->gens, sol->gens, s_rho, ctx);
-		int solved = padic_ode_solves(ODE, sol->gens + 0, n, prec/2, ctx);
+		int solved = padic_ode_solves(ODE, sol->gens + 0, n, ctx);
 
 		padic_ode_clear(ODE);
 		padic_ode_solution_clear(sol);

@@ -35,7 +35,7 @@ slong	padic_ode_valuation (padic_ode_t ODE);
 
 /* Differential Action */
 void	padic_ode_apply (padic_poly_t out, padic_ode_t ODE, padic_poly_t in, slong prec, padic_ctx_t ctx);
-int	padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, slong prec, padic_ctx_t ctx);
+int	padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, padic_ctx_t ctx);
 
 /* =============================== Solutions ================================ */
 

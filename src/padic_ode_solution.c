@@ -48,7 +48,7 @@ void _padic_ode_solution_update (padic_ode_solution_t sol, padic_poly_t f, padic
 
 	for (slong k = 0; k < sol->multiplicity; k++)
 	{
-		padic_init2(F + k, padic_get_prec(sol->rho) * (sol->multiplicity + 8));
+		padic_init2(F + k, padic_poly_prec(f));
 		padic_poly_evaluate_padic(F + k, f, sol->rho, ctx);
 		padic_poly_derivative(f, f, ctx);
 
@@ -85,13 +85,19 @@ void _padic_ode_solution_update (padic_ode_solution_t sol, padic_poly_t f, padic
 void _padic_ode_solution_extend (padic_ode_solution_t sol, slong nu, padic_poly_t g_nu, padic_ctx_t ctx)
 {
 	padic_t temp;
+	padic_poly_t der;
+
 	padic_init2(temp, padic_get_prec(sol->rho));
+	padic_poly_init2(der, padic_poly_length(g_nu), padic_poly_prec(g_nu));
+
+	padic_poly_set(der, g_nu, ctx);
 	for (slong i = 0; i < sol->multiplicity; i++)
 	{
-		padic_poly_evaluate_padic(temp, g_nu, sol->rho, ctx);
+		padic_poly_evaluate_padic(temp, der, sol->rho, ctx);
 		padic_poly_set_coeff_padic(sol->gens + i, nu, temp, ctx);
-		padic_poly_derivative(g_nu, g_nu, ctx);
+		padic_poly_derivative(der, der, ctx);
 	}
 	padic_poly_zero(g_nu);
+	padic_poly_clear(der);
 	padic_clear(temp);
 }

@@ -39,7 +39,7 @@ int main ()
 		_padic_ode_solve_frobenius(result, ODE, num, n, ctx);
 		padic_poly_shift_left(result, result, order(ODE) - 1, ctx);
 
-		int solved = padic_ode_solves(ODE, result, n - 1, prec, ctx);
+		int solved = padic_ode_solves(ODE, result, n - 1, ctx);
 
 		padic_clear(num);
 		padic_ode_clear(ODE);

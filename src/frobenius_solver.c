@@ -4,37 +4,39 @@
 void indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong shift, padic_ctx_t ctx)
 {
 	/* Compute f_ν(ρ-ς) [for definition of f, see Frobenius Paper, equation 3] */
-	padic_poly_zero(result);
 	if (nu > degree(ODE))
+	{
+		padic_poly_zero(result);
 		return;
-	slong prec = padic_poly_prec(result) + order(ODE) + degree(ODE);
+	}
+	slong prec = padic_poly_prec(result) + order(ODE) + 2;
 
 	padic_t temp1;
-	padic_poly_t horner;
+	padic_poly_t out, horner;
 
 	padic_init2(temp1, prec);
 	padic_poly_init2(horner, 2, prec);
+	padic_poly_init2(out, order(ODE) + 1, prec);
 
 	padic_one(temp1);
 	padic_poly_set_coeff_padic(horner, 1, temp1, ctx);
-
-	padic_poly_prec(result) = prec;
-	padic_poly_fit_length(result, order(ODE)+1);
 
 	slong lambda = clamp(degree(ODE) - nu, 0, order(ODE));
 	for (; lambda >= 0; lambda--)
 	{
 		padic_set_si(temp1, shift - lambda, ctx);
 		padic_poly_set_coeff_padic(horner, 0, temp1, ctx);
-		padic_poly_mul(result, result, horner, ctx);
+		padic_poly_mul(out, out, horner, ctx);
 
-		padic_poly_get_coeff_padic(temp1, result, 0, ctx);
+		padic_poly_get_coeff_padic(temp1, out, 0, ctx);
 		padic_add(temp1, temp1, padic_ode_coeff(ODE, lambda, lambda + nu), ctx);
-		padic_poly_set_coeff_padic(result, 0, temp1, ctx);
+		padic_poly_set_coeff_padic(out, 0, temp1, ctx);
 	}
+	padic_poly_set(result, out, ctx);
 
 	padic_clear(temp1);
 	padic_poly_clear(horner);
+	padic_poly_clear(out);
 }
 
 void indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, slong nu, padic_t rho, slong shift, padic_ctx_t ctx)
@@ -45,19 +47,19 @@ void indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, slong nu, pa
 		return;
 	}
 
-	slong prec = padic_get_prec(result) + order(ODE);
+	slong prec = padic_get_prec(result);
 
 	padic_t temp1, out;
 	padic_init2(temp1, prec);
 	padic_init2(out, prec);
 
-	slong lambda = clamp(degree(ODE)-nu, 0, order(ODE));
+	slong lambda = clamp(degree(ODE) - nu, 0, order(ODE));
 	for (; lambda >= 0; lambda--)
 	{
 		padic_set_si(temp1, shift - lambda, ctx);
 		padic_add(temp1, rho, temp1, ctx);
 		padic_mul(out, out, temp1, ctx);
-		padic_add(out, out, padic_ode_coeff(ODE, lambda, lambda+nu), ctx);
+		padic_add(out, out, padic_ode_coeff(ODE, lambda, lambda + nu), ctx);
 	}
 	padic_set(result, out, ctx);
 
@@ -106,7 +108,7 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 		return;
 	}
 
-	slong prec = padic_get_prec(sol->rho);
+	slong prec = padic_prec(sol->rho);
 
 	padic_t temp;
 	padic_poly_t indicial;
@@ -118,11 +120,11 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 		return;
 
 	padic_init2(temp, prec);
-	padic_poly_init2(indicial, order(ODE)+1, prec);
-	padic_poly_init2(g_new, order(ODE)+1, prec);
+	padic_poly_init2(indicial, order(ODE) + 1, prec);
+	padic_poly_init2(g_new, order(ODE) + 1, prec);
 
 	for (slong i = 0; i < degree(ODE); i++)
-		padic_poly_init(g_rho + i);
+		padic_poly_init2(g_rho + i, order(ODE) + 1, prec);
 	padic_poly_one(g_rho);
 
 	for (slong i = 0; i < sol->multiplicity; i++)

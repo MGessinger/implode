@@ -36,7 +36,7 @@ int main ()
 
 		for (slong i = 0; i < n; i++) {
 			padic_poly_init2(H + i, 16, prec);
-			padic_poly_randtest_not_zero(g, state, 20, ctx);
+			padic_poly_randtest(g, state, 20, ctx);
 			padic_poly_mul(H + i, f, g, ctx);
 			_padic_ode_solution_extend(sol, i, g, ctx);
 		}
