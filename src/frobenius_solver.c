@@ -4,11 +4,11 @@
 void indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong shift, padic_ctx_t ctx)
 {
 	/* Compute f_ν(ρ-ς) [for definition of f, see Frobenius Paper, equation 3] */
+	padic_poly_zero(result);
+	nu += padic_ode_valuation(ODE);
 	if (nu > degree(ODE))
-	{
-		padic_poly_zero(result);
 		return;
-	}
+
 	slong prec = padic_poly_prec(result) + order(ODE) + 2;
 
 	padic_t temp1;
@@ -28,6 +28,9 @@ void indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong 
 		padic_poly_set_coeff_padic(horner, 0, temp1, ctx);
 		padic_poly_mul(out, out, horner, ctx);
 
+		if (lambda + nu < 0)
+			continue;
+
 		padic_poly_get_coeff_padic(temp1, out, 0, ctx);
 		padic_add(temp1, temp1, padic_ode_coeff(ODE, lambda, lambda + nu), ctx);
 		padic_poly_set_coeff_padic(out, 0, temp1, ctx);
@@ -41,6 +44,7 @@ void indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong 
 
 void indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, slong nu, padic_t rho, slong shift, padic_ctx_t ctx)
 {
+	nu += padic_ode_valuation(ODE);
 	if (nu > degree(ODE))
 	{
 		padic_zero(result);
@@ -59,6 +63,10 @@ void indicial_polynomial_evaluate (padic_t result, padic_ode_t ODE, slong nu, pa
 		padic_set_si(temp1, shift - lambda, ctx);
 		padic_add(temp1, rho, temp1, ctx);
 		padic_mul(out, out, temp1, ctx);
+
+		if (lambda + nu < 0)
+			continue;
+
 		padic_add(out, out, padic_ode_coeff(ODE, lambda, lambda + nu), ctx);
 	}
 	padic_set(result, out, ctx);
@@ -102,7 +110,7 @@ void _padic_ode_solve_frobenius (padic_poly_t res, padic_ode_t ODE, padic_t rho,
 
 void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong sol_degree, padic_ctx_t ctx)
 {
-	if (sol->multiplicity == 1 && sol->alpha == 0)
+	if (sol->M == 1)
 	{
 		_padic_ode_solve_frobenius(sol->gens, ODE, sol->rho, sol_degree, ctx);
 		return;
@@ -127,7 +135,7 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 		padic_poly_init2(g_rho + i, order(ODE) + 1, prec);
 	padic_poly_one(g_rho);
 
-	for (slong i = 0; i < sol->multiplicity; i++)
+	for (slong i = 0; i < sol->M; i++)
 	{
 		padic_poly_zero(sol->gens + i);
 		padic_poly_fit_length(sol->gens + i, sol_degree + 1);
@@ -150,9 +158,12 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 
 		/* Rescale the indicial polynomial, to keep coefficients small */
 		indicial_polynomial_evaluate(temp, ODE, 0, sol->rho, nu, ctx);
-		padic_inv(temp, temp, ctx);
-		padic_poly_scalar_mul_padic(indicial, indicial, temp, ctx);
-		padic_poly_scalar_mul_padic(g_new, g_new, temp, ctx);
+		if (!padic_is_zero(temp))
+		{
+			padic_inv(temp, temp, ctx);
+			padic_poly_scalar_mul_padic(indicial, indicial, temp, ctx);
+			padic_poly_scalar_mul_padic(g_new, g_new, temp, ctx);
+		}
 
 		/* Multiply all relevant g_nu(rho) by f(rho + nu) */
 		int all_zero = padic_poly_is_zero(g_new);

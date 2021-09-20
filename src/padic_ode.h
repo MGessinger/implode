@@ -10,6 +10,7 @@ typedef struct {
 	slong order;
 	slong degree;
 	slong alloc;
+	slong valuation;
 	padic_struct *polys;
 } padic_ode;
 
@@ -40,10 +41,10 @@ int	padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, padic_ctx_t 
 /* =============================== Solutions ================================ */
 
 typedef struct {
-	padic_t rho;		/* root of the indicial equation */
-	slong multiplicity;	/* counts the number of roots equal to rho */
-	slong alpha;		/* alpha distinguishes roots within a group */
-	padic_poly_struct *gens;/* contains the series g_ν and its derivatives */
+	padic_t rho;		/* characteristic exponent */
+	slong mul;		/* Multiplicity */
+	slong M;		/* position in the group */
+	padic_poly_struct *gens;/* power series */
 } padic_ode_solution_struct;
 
 typedef padic_ode_solution_struct padic_ode_solution_t[1];

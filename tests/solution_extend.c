@@ -34,7 +34,7 @@ int main ()
 			padic_poly_randtest_not_zero(f, state, 20, ctx);
 			padic_poly_set(g, f, ctx);
 			_padic_ode_solution_extend(sol, i, g, ctx);
-			for (slong j = 0; j < sol->multiplicity; j++)
+			for (slong j = 0; j < sol->M; j++)
 			{
 				padic_poly_evaluate_padic(rho, f, sol->rho, ctx);
 				padic_poly_get_coeff_padic(val, sol->gens + j, i, ctx);

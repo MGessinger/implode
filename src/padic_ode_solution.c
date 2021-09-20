@@ -2,31 +2,31 @@
 
 void padic_ode_solution_init (padic_ode_solution_t sol, padic_t rho, slong mul, slong alpha, padic_ctx_t ctx)
 {
-	sol->multiplicity = mul;
-	sol->alpha = alpha;
+	sol->mul = mul;
+	sol->M = mul + alpha;
 
 	padic_init2(sol->rho, padic_get_prec(rho));
 	padic_set(sol->rho, rho, ctx);
 
-	sol->gens = flint_malloc(mul * sizeof(padic_poly_struct));
-	for (slong i = 0; i < mul; i++)
+	sol->gens = flint_malloc(sol->M * sizeof(padic_poly_struct));
+	for (slong i = 0; i < sol->M; i++)
 		padic_poly_init2(sol->gens + i, 16, padic_get_prec(rho));
 }
 
 void padic_ode_solution_clear (padic_ode_solution_t sol)
 {
 	padic_clear(sol->rho);
-	for (slong i = 0; i < sol->multiplicity; i++)
+	for (slong i = 0; i < sol->M; i++)
 		padic_poly_clear(sol->gens + i);
 	flint_free(sol->gens);
 }
 
 void padic_ode_solution_dump (padic_ode_solution_t sol, padic_ctx_t ctx)
 {
-	flint_printf("Solution adjoint to the exponent "); padic_print(sol->rho, ctx); flint_printf(" of multiplicity %w.\n", sol->multiplicity);
-	for (slong i = 0; i < sol->multiplicity; i++)
+	flint_printf("Solution adjoint to the exponent "); padic_print(sol->rho, ctx); flint_printf(" of multiplicity %w.\n", sol->mul);
+	for (slong i = 0; i < sol->M; i++)
 	{
-		flint_printf("log(x)^%w *\t", sol->multiplicity - 1 - i);
+		flint_printf("log(x)^%w *\t", sol->M - 1 - i);
 		padic_poly_print_pretty(sol->gens + i, "x", ctx);
 		flint_printf("\n\n");
 	}
@@ -38,28 +38,29 @@ void _padic_ode_solution_update (padic_ode_solution_t sol, padic_poly_t f, padic
 	padic_struct *F;
 	padic_t temp1, temp2;
 
-	F = flint_malloc( sol->multiplicity * sizeof(padic_struct));
+	F = flint_malloc(sol->M * sizeof(padic_struct));
 	if (F == NULL)
 		return;
+
 	padic_init(temp1);
 	padic_init(temp2);
 
 	padic_one(temp2);
 
-	for (slong k = 0; k < sol->multiplicity; k++)
+	for (slong k = 0; k < sol->M; k++)
 	{
 		padic_init2(F + k, padic_poly_prec(f));
 		padic_poly_evaluate_padic(F + k, f, sol->rho, ctx);
 		padic_poly_derivative(f, f, ctx);
 
 		padic_mul(F + k, F + k, temp2, ctx);
-		padic_set_si(temp1, sol->multiplicity - 1 - k, ctx);
+		padic_set_si(temp1, sol->M - 1 - k, ctx);
 		padic_mul(temp2, temp2, temp1, ctx);
 		padic_set_si(temp1, k + 1, ctx);
 		padic_div(temp2, temp2, temp1, ctx);
 	}
 
-	for (slong n = sol->multiplicity - 1; n >= 0; n--)
+	for (slong n = sol->M - 1; n >= 0; n--)
 	{
 		padic_poly_scalar_mul_padic(sol->gens + n, sol->gens + n, F + 0, ctx);
 		padic_set_si(temp2, n, ctx);
@@ -91,7 +92,7 @@ void _padic_ode_solution_extend (padic_ode_solution_t sol, slong nu, padic_poly_
 	padic_poly_init2(der, padic_poly_length(g_nu), padic_poly_prec(g_nu));
 
 	padic_poly_set(der, g_nu, ctx);
-	for (slong i = 0; i < sol->multiplicity; i++)
+	for (slong i = 0; i < sol->M; i++)
 	{
 		padic_poly_evaluate_padic(temp, der, sol->rho, ctx);
 		padic_poly_set_coeff_padic(sol->gens + i, nu, temp, ctx);

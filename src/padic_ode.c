@@ -1,5 +1,9 @@
 #include "padic_ode.h"
 
+#define UNDEFINED -0xFFFF
+
+/* Static function */
+
 static inline int max_degree (padic_poly_t *polys, slong order)
 {
 	slong deg, poly_max_degree = 0;
@@ -27,6 +31,7 @@ void padic_ode_init_blank (padic_ode_t ODE, slong degree, slong order, slong pre
 	ODE->degree = degree;
 	ODE->polys = NULL;
 	ODE->alloc = 0;
+	ODE->valuation = UNDEFINED;
 
 	if (degree < 0 || order <= 0)
 		return;
@@ -72,6 +77,7 @@ void padic_ode_set (padic_ode_t ODE_out, padic_ode_t ODE_in, slong prec, padic_c
 
 	for (slong i = 0; i < ODE_in->alloc; i++)
 		padic_set(ODE_out->polys + i, ODE_in->polys + i, ctx);
+	ODE_out->valuation = padic_ode_valuation(ODE_in);
 }
 
 /* Differential action */
@@ -153,15 +159,20 @@ void padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx)
 
 slong padic_ode_valuation (padic_ode_t ODE)
 {
-	slong val = 0;
+	if (ODE->valuation != UNDEFINED)
+		return ODE->valuation;
+
+	slong val = degree(ODE);
 	for (int i = 0; i <= order(ODE); i++)
 	{
-		slong v = i;
-		while (padic_is_zero(padic_ode_coeff(ODE, i, i-v)))
-			v--;
+		slong v = 0;
+		while (padic_is_zero(padic_ode_coeff(ODE, i, v)))
+			v++;
 
-		if (v > val)
+		v = v - i;
+		if (v < val)
 			val = v;
 	}
+	ODE->valuation = val;
 	return val;
 }

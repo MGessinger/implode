@@ -12,10 +12,10 @@ slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coe
 	slong v = padic_ode_valuation(ODE);
 
 	padic_poly_fit_length(res, num_of_coeffs);
-	for (slong b_max = v; b_max < num_of_coeffs; b_max++)
+	for (slong b_max = -v; b_max < num_of_coeffs; b_max++)
 	{
 		padic_zero(new_coeff);
-		slong exp = b_max - v;
+		slong exp = b_max + v;
 		/* Loop through the known coefficients of the power series */
 		slong b_min = clamp(exp - degree(ODE), 0, b_max);
 		padic_set(temp2, padic_ode_coeff(ODE, 0, exp - b_min), ctx);
@@ -29,7 +29,7 @@ slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coe
 			fmpz_one(fac);
 			/* Loop through the polynomials */
 			b++;
-			i_min = clamp(b - exp, 0, v);
+			i_min = clamp(b - exp, 0, -v);
 			i_max = clamp(b - b_min, 0, order(ODE));
 			for (slong i = i_min; i <= i_max; i++)
 			{

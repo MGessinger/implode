@@ -46,7 +46,7 @@ int main ()
 		/* Check */
 		for (slong j = 0; j < n; j++)
 		{
-			for (slong i = 0; i < sol->multiplicity; i++)
+			for (slong i = 0; i < sol->M; i++)
 			{
 				padic_poly_evaluate_padic(rho, H + j, sol->rho, ctx);
 				padic_poly_get_coeff_padic(val, sol->gens + i, j, ctx);
