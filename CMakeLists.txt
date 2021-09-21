@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(PadicODE VERSION 0.1 LANGUAGES C)
+project(Explode VERSION 0.1 LANGUAGES C)
 
 set(DEPS gmp flint)
 
@@ -17,21 +17,21 @@ endforeach ()
 enable_testing()
 add_subdirectory(tests)
 
-set(padicSrc
+set(ExplodeSrc
 	src/padic_ode.c
 	src/padic_ode_solution.c
 	src/fuchs_solver.c
 	src/frobenius_solver.c
 )
 
-set(padicHeaders
+set(ExplodeHeaders
 	src/padic_ode.h
-	src/padic_ode_solver.h
+	src/explode.h
 )
 
-add_library(padicODE SHARED ${padicSrc})
-target_link_libraries(padicODE ${DEPS})
-target_compile_options(padicODE PRIVATE -Wall -Wextra -pedantic)
+add_library(explode SHARED ${ExplodeSrc})
+target_link_libraries(explode ${DEPS})
+target_compile_options(explode PRIVATE -Wall -Wextra -pedantic)
 
-set_target_properties(padicODE PROPERTIES PUBLIC_HEADER "${CascadeHeaders}")
-set_target_properties(padicODE PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(explode PROPERTIES PUBLIC_HEADER "${ExplodeHeaders}")
+set_target_properties(explode PROPERTIES VERSION ${PROJECT_VERSION})

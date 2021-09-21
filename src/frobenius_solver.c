@@ -1,5 +1,5 @@
 #include "padic_ode.h"
-#include "padic_ode_solver.h"
+#include "explode.h"
 
 void indicial_polynomial (padic_poly_t result, padic_ode_t ODE, slong nu, slong shift, padic_ctx_t ctx)
 {
