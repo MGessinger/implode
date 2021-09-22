@@ -33,6 +33,7 @@ void	padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx);
 /* Transformations */
 slong	padic_ode_reduce (padic_ode_t ODE);
 slong	padic_ode_valuation (padic_ode_t ODE);
+void	padic_ode_shift (padic_ode_t out, padic_ode_t in, padic_t a, padic_ctx_t ctx);
 
 /* Differential Action */
 void	padic_ode_apply (padic_poly_t out, padic_ode_t ODE, padic_poly_t in, slong prec, padic_ctx_t ctx);

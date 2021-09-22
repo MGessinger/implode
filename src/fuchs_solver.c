@@ -1,4 +1,4 @@
-#include "explode.h"
+#include "implode.h"
 
 slong padic_ode_solve_fuchs (padic_poly_t res, padic_ode_t ODE, slong num_of_coeffs, padic_ctx_t ctx)
 {

@@ -72,6 +72,8 @@ void padic_ode_clear (padic_ode_t ODE)
 
 void padic_ode_set (padic_ode_t ODE_out, padic_ode_t ODE_in, slong prec, padic_ctx_t ctx)
 {
+	if (ODE_out == ODE_in)
+		return;
 	padic_ode_clear(ODE_out);
 	padic_ode_init_blank(ODE_out, order(ODE_in), degree(ODE_in), prec);
 
@@ -134,6 +136,7 @@ int padic_ode_solves (padic_ode_t ODE, padic_poly_t res, slong deg, padic_ctx_t 
 }
 
 /* I/O */
+
 void padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx)
 {
 	/* Dumps the ODE to file. If file is NULL, dump to stdout */
@@ -157,6 +160,8 @@ void padic_ode_dump (padic_ode_t ODE, char *file, padic_ctx_t ctx)
 		fclose(out);
 }
 
+/* Transformations */
+
 slong padic_ode_valuation (padic_ode_t ODE)
 {
 	if (ODE->valuation != UNDEFINED)
@@ -167,7 +172,11 @@ slong padic_ode_valuation (padic_ode_t ODE)
 	{
 		slong v = 0;
 		while (padic_is_zero(padic_ode_coeff(ODE, i, v)))
+		{
 			v++;
+			if (v > degree(ODE))
+				break;
+		}
 
 		v = v - i;
 		if (v < val)
@@ -175,4 +184,37 @@ slong padic_ode_valuation (padic_ode_t ODE)
 	}
 	ODE->valuation = val;
 	return val;
+}
+
+void padic_ode_shift (padic_ode_t out, padic_ode_t in, padic_t a, padic_ctx_t ctx)
+{
+	padic_poly_t shift, temp;
+	slong prec;
+	prec = padic_get_prec(a);
+	padic_ode_set(out, in, prec, ctx);
+	if (padic_is_zero(a))
+		return;
+	if (degree(in) == 0)
+		return;
+
+	padic_poly_init2(shift, 2, prec);
+	padic_poly_init2(temp, degree(in) + 1, prec);
+
+	padic_poly_one(shift);
+	padic_poly_shift_left(shift, shift, 1, ctx);
+	padic_poly_set_coeff_padic(shift, 0, a, ctx);
+
+	for (slong i = 0; i <= order(out); i++)
+	{
+		for (slong j = 0; j <= degree(in); j++)
+			padic_poly_set_coeff_padic(temp, j, padic_ode_coeff(in, i, j), ctx);
+
+		padic_poly_compose(temp, temp, shift, ctx);
+
+		for (slong j = 0; j <= degree(out); j++)
+			padic_poly_get_coeff_padic(padic_ode_coeff(out, i, j), temp, j, ctx);
+	}
+
+	padic_poly_clear(shift);
+	padic_poly_clear(temp);
 }

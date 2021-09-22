@@ -1,5 +1,5 @@
 #include "padic_ode.h"
-#include "explode.h"
+#include "implode.h"
 
 void assert_equal (const char *errMsg, padic_t exp, padic_t real, padic_ctx_t ctx)
 {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(Explode VERSION 0.1 LANGUAGES C)
+project(Implode VERSION 0.1 LANGUAGES C)
 
 set(DEPS gmp flint)
 
@@ -26,12 +26,19 @@ set(ExplodeSrc
 
 set(ExplodeHeaders
 	src/padic_ode.h
-	src/explode.h
+	src/implode.h
 )
 
-add_library(explode SHARED ${ExplodeSrc})
-target_link_libraries(explode ${DEPS})
-target_compile_options(explode PRIVATE -Wall -Wextra -pedantic)
+add_library(implode SHARED ${ExplodeSrc})
+target_link_libraries(implode ${DEPS})
 
-set_target_properties(explode PROPERTIES PUBLIC_HEADER "${ExplodeHeaders}")
-set_target_properties(explode PROPERTIES VERSION ${PROJECT_VERSION})
+if (MSVC)
+	add_compile_options(/W4 /WX)
+else()
+	add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+set_target_properties(implode PROPERTIES PUBLIC_HEADER "${ExplodeHeaders}")
+set_target_properties(implode PROPERTIES VERSION ${PROJECT_VERSION})
+
+install(TARGETS implode LIBRARY PUBLIC_HEADER)
