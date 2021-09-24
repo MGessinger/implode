@@ -217,4 +217,5 @@ void padic_ode_shift (padic_ode_t out, padic_ode_t in, padic_t a, padic_ctx_t ct
 
 	padic_poly_clear(shift);
 	padic_poly_clear(temp);
+	out->valuation = UNDEFINED;
 }

@@ -184,6 +184,8 @@ void padic_ode_solve_frobenius (padic_ode_solution_t sol, padic_ode_t ODE, slong
 			break;
 	}
 
+	_padic_ode_solution_normalize(sol, ctx);
+
 	padic_poly_clear(g_new);
 	padic_poly_clear(indicial);
 	for (slong i = 0; i < degree(ODE); i++)

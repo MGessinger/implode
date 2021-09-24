@@ -102,3 +102,18 @@ void _padic_ode_solution_extend (padic_ode_solution_t sol, slong nu, padic_poly_
 	padic_poly_clear(der);
 	padic_clear(temp);
 }
+
+void _padic_ode_solution_normalize (padic_ode_solution_t sol, padic_ctx_t ctx)
+{
+	padic_t t;
+	padic_init2(t, padic_get_prec(sol->rho));
+
+	slong alpha = sol->M - sol->mul;
+	padic_poly_get_coeff_padic(t, sol->gens + alpha, 0, ctx);
+	padic_inv(t, t, ctx);
+
+	for (slong i = 0; i < sol->M; i++)
+		padic_poly_scalar_mul_padic(sol->gens + i, sol->gens + i, t, ctx);
+
+	padic_clear(t);
+}
